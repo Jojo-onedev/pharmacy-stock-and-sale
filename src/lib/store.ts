@@ -85,7 +85,7 @@ export const actions = {
     return true;
   },
   logout() { set((s) => ({ ...s, logs: log(s, "Déconnexion"), sessionUserId: null })); },
-  saveUser(u: Partial<User> & { name: string; role: Role }, pin?: string) {
+  saveUser(u: { id?: string | undefined; name: string; role: Role; active?: boolean }, pin?: string) {
     set((s) => {
       const users = u.id
         ? s.users.map((x) => (x.id === u.id ? { ...x, ...u, pinHash: pin ? hashPin(pin) : x.pinHash } : x))

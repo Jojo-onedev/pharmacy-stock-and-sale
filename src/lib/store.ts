@@ -87,9 +87,10 @@ export const actions = {
   logout() { set((s) => ({ ...s, logs: log(s, "Déconnexion"), sessionUserId: null })); },
   saveUser(u: { id?: string | undefined; name: string; role: Role; active?: boolean }, pin?: string) {
     set((s) => {
-      const users = u.id
-        ? s.users.map((x) => (x.id === u.id ? { ...x, ...u, pinHash: pin ? hashPin(pin) : x.pinHash } : x))
-        : [...s.users, { id: uid(), active: true, pinHash: hashPin(pin || "0000"), ...u } as User];
+      const fields = { name: u.name, role: u.role, active: u.active ?? true };
+      const users: User[] = u.id
+        ? s.users.map((x) => (x.id === u.id ? { ...x, ...fields, pinHash: pin ? hashPin(pin) : x.pinHash } : x))
+        : [...s.users, { id: uid(), pinHash: hashPin(pin || "0000"), ...fields }];
       return { ...s, users, logs: log(s, u.id ? `Modification utilisateur ${u.name}${pin ? " (PIN réinitialisé)" : ""}` : `Création utilisateur ${u.name}`) };
     });
   },

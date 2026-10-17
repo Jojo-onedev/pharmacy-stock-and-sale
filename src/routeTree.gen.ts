@@ -10,33 +10,91 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CommandesRouteImport } from './routes/commandes'
+import { Route as HistoriqueRouteImport } from './routes/historique'
+import { Route as StockRouteImport } from './routes/stock'
+import { Route as UtilisateursRouteImport } from './routes/utilisateurs'
+import { Route as VenteRouteImport } from './routes/vente'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CommandesRoute = CommandesRouteImport.update({
+  id: '/commandes',
+  path: '/commandes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoriqueRoute = HistoriqueRouteImport.update({
+  id: '/historique',
+  path: '/historique',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StockRoute = StockRouteImport.update({
+  id: '/stock',
+  path: '/stock',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UtilisateursRoute = UtilisateursRouteImport.update({
+  id: '/utilisateurs',
+  path: '/utilisateurs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VenteRoute = VenteRouteImport.update({
+  id: '/vente',
+  path: '/vente',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/commandes': typeof CommandesRoute
+  '/historique': typeof HistoriqueRoute
+  '/stock': typeof StockRoute
+  '/utilisateurs': typeof UtilisateursRoute
+  '/vente': typeof VenteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/commandes': typeof CommandesRoute
+  '/historique': typeof HistoriqueRoute
+  '/stock': typeof StockRoute
+  '/utilisateurs': typeof UtilisateursRoute
+  '/vente': typeof VenteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/commandes': typeof CommandesRoute
+  '/historique': typeof HistoriqueRoute
+  '/stock': typeof StockRoute
+  '/utilisateurs': typeof UtilisateursRoute
+  '/vente': typeof VenteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    '/' | '/commandes' | '/historique' | '/stock' | '/utilisateurs' | '/vente'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/commandes' | '/historique' | '/stock' | '/utilisateurs' | '/vente'
+  id:
+    | '__root__'
+    | '/'
+    | '/commandes'
+    | '/historique'
+    | '/stock'
+    | '/utilisateurs'
+    | '/vente'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CommandesRoute: typeof CommandesRoute
+  HistoriqueRoute: typeof HistoriqueRoute
+  StockRoute: typeof StockRoute
+  UtilisateursRoute: typeof UtilisateursRoute
+  VenteRoute: typeof VenteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +106,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/commandes': {
+      id: '/commandes'
+      path: '/commandes'
+      fullPath: '/commandes'
+      preLoaderRoute: typeof CommandesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historique': {
+      id: '/historique'
+      path: '/historique'
+      fullPath: '/historique'
+      preLoaderRoute: typeof HistoriqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stock': {
+      id: '/stock'
+      path: '/stock'
+      fullPath: '/stock'
+      preLoaderRoute: typeof StockRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/utilisateurs': {
+      id: '/utilisateurs'
+      path: '/utilisateurs'
+      fullPath: '/utilisateurs'
+      preLoaderRoute: typeof UtilisateursRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vente': {
+      id: '/vente'
+      path: '/vente'
+      fullPath: '/vente'
+      preLoaderRoute: typeof VenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CommandesRoute: CommandesRoute,
+  HistoriqueRoute: HistoriqueRoute,
+  StockRoute: StockRoute,
+  UtilisateursRoute: UtilisateursRoute,
+  VenteRoute: VenteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

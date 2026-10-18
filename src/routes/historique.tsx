@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, card } from "@/components/AppShell";
-import { currentUser, fcfa, useStore } from "@/lib/store";
+import { currentUser, fcfa, todaySales, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/historique")({
   head: () => ({
@@ -21,8 +21,7 @@ function Historique() {
   const me = currentUser(s)!;
   const isAdmin = me.role === "admin";
   const sales = isAdmin ? s.sales : s.sales.filter((x) => x.userId === me.id);
-  const today = new Date().toDateString();
-  const todays = sales.filter((x) => new Date(x.date).toDateString() === today);
+  const todays = todaySales(s);
   const sum = (arr: typeof sales, k: "total" | "cash" | "momo") => arr.reduce((a, x) => a + x[k], 0);
   const top = Object.entries(sales.flatMap((x) => x.items).reduce<Record<string, number>>((a, i) => ({ ...a, [i.name]: (a[i.name] ?? 0) + i.qty }), {})).sort((a, b) => b[1] - a[1]).slice(0, 5);
 

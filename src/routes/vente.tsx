@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Minus, Plus, Search, Send, Trash2, Printer, CheckCircle2, Banknote, Smartphone, Shuffle } from "lucide-react";
 import { AppShell, btnGhost, btnPrimary, card, inputCls } from "@/components/AppShell";
-import { actions, fcfa, useStore, type PayMode, type Sale, type SaleItem } from "@/lib/store";
+import { actions, fcfa, useStore, type PayMode, type Sale, type SaleItem, type Ticket } from "@/lib/store";
+import { available } from "@/lib/closure";
 import { computePayment } from "@/lib/payment";
 
 export const Route = createFileRoute("/vente")({
@@ -21,7 +22,9 @@ function Vente() {
   const s = useStore();
   const [q, setQ] = useState("");
   const [cart, setCart] = useState<SaleItem[]>([]);
-  const [checkout, setCheckout] = useState<SaleItem[] | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const active: Ticket | null = s.tickets.find((t) => t.id === activeId) ?? null;
+  const checkout = active?.items ?? null;
   const [mode, setMode] = useState<PayMode>("cash");
   const [received, setReceived] = useState("");
   const [momo, setMomo] = useState("");
@@ -31,13 +34,16 @@ function Vente() {
     const t = q.toLowerCase().trim();
     return s.products.filter((p) => !t || p.name.toLowerCase().includes(t) || p.code.includes(t));
   }, [q, s.products]);
-  const stockOf = (id: string) => s.products.find((p) => p.id === id)?.qty ?? 0;
+  const pending = (id: string) => s.tickets.reduce((a, t) => a + t.items.filter((i) => i.productId === id).reduce((b, i) => b + i.qty, 0), 0);
+  const stockOf = (id: string) => available(s.products.find((p) => p.id === id)?.qty ?? 0, pending(id));
+  const leftOf = (id: string) => available(stockOf(id), cart.find((i) => i.productId === id)?.qty ?? 0);
   const add = (id: string) => {
     const p = s.products.find((x) => x.id === id)!;
+    const max = stockOf(id);
     setCart((c) => {
       const ex = c.find((i) => i.productId === id);
-      if (ex) return ex.qty >= p.qty ? c : c.map((i) => (i.productId === id ? { ...i, qty: i.qty + 1 } : i));
-      return p.qty > 0 ? [...c, { productId: p.id, name: p.name, price: p.price, qty: 1 }] : c;
+      if (ex) return ex.qty >= max ? c : c.map((i) => (i.productId === id ? { ...i, qty: i.qty + 1 } : i));
+      return max > 0 ? [...c, { productId: p.id, name: p.name, price: p.price, qty: 1 }] : c;
     });
   };
   const setQty = (id: string, qty: number) => setCart((c) => c.flatMap((i) => (i.productId !== id ? [i] : qty <= 0 ? [] : [{ ...i, qty: Math.min(qty, stockOf(id)) }])));
@@ -47,8 +53,8 @@ function Vente() {
 
   const validate = () => {
     if (!checkout || !pay.valid) return;
-    const sale = actions.recordSale({ items: checkout, total: dueTotal, cash: pay.cash, momo: pay.momo, received: mode === "momo" ? 0 : Number(received) || 0, change: pay.change, mode });
-    setTicket(sale); setCheckout(null); setReceived(""); setMomo(""); setMode("cash");
+    const sale = actions.recordSale({ items: checkout, total: dueTotal, cash: pay.cash, momo: pay.momo, received: mode === "momo" ? 0 : Number(received) || 0, change: pay.change, mode }, active!);
+    setTicket(sale); setActiveId(null); setReceived(""); setMomo(""); setMode("cash");
   };
 
   return (
@@ -62,8 +68,8 @@ function Vente() {
         </div>
         <div className="grid max-h-[340px] grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
           {list.map((p) => (
-            <button key={p.id} disabled={p.qty === 0} onClick={() => add(p.id)} className="flex items-center justify-between rounded-xl border p-3 text-left hover:border-primary hover:bg-accent/40 disabled:opacity-50">
-              <div><div className="text-sm font-semibold">{p.name}</div><div className="text-xs text-muted-foreground">{p.code} · {p.qty === 0 ? "Rupture" : `${p.qty} en stock`}</div></div>
+            <button key={p.id} disabled={leftOf(p.id) === 0} onClick={() => add(p.id)} className="flex items-center justify-between rounded-xl border p-3 text-left hover:border-primary hover:bg-accent/40 disabled:opacity-50">
+              <div><div className="text-sm font-semibold">{p.name}</div><div className="text-xs text-muted-foreground">{p.code} · {leftOf(p.id) === 0 ? "Épuisé" : `${leftOf(p.id)} disponible(s)`}{p.qty > 0 && p.qty <= p.threshold ? " · stock faible" : ""}</div></div>
               <div className="text-sm font-bold text-primary">{fcfa(p.price)}</div>
             </button>
           ))}
@@ -85,16 +91,28 @@ function Vente() {
         )}
         <div className="mt-4 flex items-center justify-between">
           <div><div className="text-xs text-muted-foreground">Total</div><div className="font-display text-2xl font-bold">{fcfa(total)}</div></div>
-          <button className={btnPrimary} disabled={!cart.length || !!checkout} onClick={() => { setCheckout(cart); setCart([]); }}><Send className="h-4 w-4" />Envoyer à la caisse</button>
+          <button className={btnPrimary} disabled={!cart.length} onClick={() => { actions.sendTicket(cart); setCart([]); }}><Send className="h-4 w-4" />Envoyer à la caisse</button>
         </div>
       </section>
 
       <section className={`${card} no-print bg-secondary`}>
         <h2 className="font-display text-xl font-bold">Caisse</h2>
-        {!checkout ? <p className="mt-10 text-center text-sm text-muted-foreground">En attente d'une vente…</p> : (
+        <div className="mt-3 space-y-2">
+          {s.tickets.length === 0 && <p className="mt-6 text-center text-sm text-muted-foreground">Aucun ticket en attente…</p>}
+          {s.tickets.map((t) => (
+            <div key={t.id} className={`flex items-center gap-2 rounded-xl border bg-card p-3 ${t.id === activeId ? "ring-2 ring-primary" : ""}`}>
+              <button className="flex-1 text-left" onClick={() => { setActiveId(t.id); setMode("cash"); setReceived(""); setMomo(""); }}>
+                <div className="text-sm font-semibold">{t.number} · {fcfa(t.items.reduce((a, i) => a + i.price * i.qty, 0))}</div>
+                <div className="text-xs text-muted-foreground">{t.userName} · {t.items.reduce((a, i) => a + i.qty, 0)} article(s) · {new Date(t.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</div>
+              </button>
+              <button className="p-1 text-muted-foreground hover:text-destructive" aria-label="Annuler le ticket" onClick={() => { if (confirm(`Annuler le ticket ${t.number} ?`)) { actions.removeTicket(t.id); if (t.id === activeId) setActiveId(null); } }}><Trash2 className="h-4 w-4" /></button>
+            </div>
+          ))}
+        </div>
+        {checkout && (
           <div className="mt-4 space-y-4">
             <div className="rounded-2xl bg-primary p-5 text-primary-foreground">
-              <div className="text-sm opacity-80">Montant à régler · {checkout.length} article(s)</div>
+              <div className="text-sm opacity-80">Ticket {active!.number} · {active!.userName} · {checkout.length} article(s)</div>
               <div className="font-display text-4xl font-bold">{fcfa(dueTotal)}</div>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -103,7 +121,7 @@ function Vente() {
               ))}
             </div>
             {mode === "mixte" && (
-              <div><label className="text-sm font-medium">Part Mobile Money</label><input type="number" className={inputCls} value={momo} onChange={(e) => setMomo(e.target.value)} />
+              <div><label className="text-sm font-medium">Part Mobile Money</label><input type="number" className={inputCls} value={momo} onChange={(e) => { setMomo(e.target.value); setReceived(String(Math.max(0, dueTotal - (Number(e.target.value) || 0)))); }} />
                 <p className="mt-1 text-xs text-muted-foreground">Reste en espèces : {fcfa(Math.max(0, dueTotal - (Number(momo) || 0)))}</p></div>
             )}
             {mode !== "momo" && (
@@ -116,7 +134,7 @@ function Vente() {
               <span className={`font-display text-2xl font-bold ${pay.valid ? "text-primary" : "text-muted-foreground"}`}>{fcfa(pay.change)}</span>
             </div>
             <div className="flex gap-2">
-              <button className={btnGhost} onClick={() => { setCart(checkout); setCheckout(null); }}>Retour</button>
+              <button className={btnGhost} onClick={() => setActiveId(null)}>Fermer</button>
               <button className={`${btnPrimary} flex-1 py-3`} disabled={!pay.valid} onClick={validate}><CheckCircle2 className="h-4 w-4" />Valider la vente</button>
             </div>
           </div>

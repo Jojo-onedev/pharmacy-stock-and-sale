@@ -67,7 +67,7 @@ function CloseAccount({ userId, onClose }: { userId: string; onClose: () => void
   const open = openSalesOf(s, userId);
   const [counted, setCounted] = useState("");
   const sum = summarizeSales(open, counted === "" ? undefined : Number(counted));
-  const first = open.length ? open[open.length - 1].date : null;
+  const first = open.at(-1)?.date ?? null;
   const row = (l: string, v: string, strong = false) => <div className={`flex justify-between py-1.5 ${strong ? "font-bold" : ""}`}><span>{l}</span><span>{v}</span></div>;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4">

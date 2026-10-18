@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CommandesRouteImport } from './routes/commandes'
 import { Route as HistoriqueRouteImport } from './routes/historique'
 import { Route as StockRouteImport } from './routes/stock'
+import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as UtilisateursRouteImport } from './routes/utilisateurs'
 import { Route as VenteRouteImport } from './routes/vente'
 
@@ -36,6 +37,11 @@ const StockRoute = StockRouteImport.update({
   path: '/stock',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TableauDeBordRoute = TableauDeBordRouteImport.update({
+  id: '/tableau-de-bord',
+  path: '/tableau-de-bord',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UtilisateursRoute = UtilisateursRouteImport.update({
   id: '/utilisateurs',
   path: '/utilisateurs',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/commandes': typeof CommandesRoute
   '/historique': typeof HistoriqueRoute
   '/stock': typeof StockRoute
+  '/tableau-de-bord': typeof TableauDeBordRoute
   '/utilisateurs': typeof UtilisateursRoute
   '/vente': typeof VenteRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/commandes': typeof CommandesRoute
   '/historique': typeof HistoriqueRoute
   '/stock': typeof StockRoute
+  '/tableau-de-bord': typeof TableauDeBordRoute
   '/utilisateurs': typeof UtilisateursRoute
   '/vente': typeof VenteRoute
 }
@@ -69,21 +77,36 @@ export interface FileRoutesById {
   '/commandes': typeof CommandesRoute
   '/historique': typeof HistoriqueRoute
   '/stock': typeof StockRoute
+  '/tableau-de-bord': typeof TableauDeBordRoute
   '/utilisateurs': typeof UtilisateursRoute
   '/vente': typeof VenteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/commandes' | '/historique' | '/stock' | '/utilisateurs' | '/vente'
+    | '/'
+    | '/commandes'
+    | '/historique'
+    | '/stock'
+    | '/tableau-de-bord'
+    | '/utilisateurs'
+    | '/vente'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/commandes' | '/historique' | '/stock' | '/utilisateurs' | '/vente'
+  to:
+    | '/'
+    | '/commandes'
+    | '/historique'
+    | '/stock'
+    | '/tableau-de-bord'
+    | '/utilisateurs'
+    | '/vente'
   id:
     | '__root__'
     | '/'
     | '/commandes'
     | '/historique'
     | '/stock'
+    | '/tableau-de-bord'
     | '/utilisateurs'
     | '/vente'
   fileRoutesById: FileRoutesById
@@ -93,6 +116,7 @@ export interface RootRouteChildren {
   CommandesRoute: typeof CommandesRoute
   HistoriqueRoute: typeof HistoriqueRoute
   StockRoute: typeof StockRoute
+  TableauDeBordRoute: typeof TableauDeBordRoute
   UtilisateursRoute: typeof UtilisateursRoute
   VenteRoute: typeof VenteRoute
 }
@@ -127,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StockRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tableau-de-bord': {
+      id: '/tableau-de-bord'
+      path: '/tableau-de-bord'
+      fullPath: '/tableau-de-bord'
+      preLoaderRoute: typeof TableauDeBordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/utilisateurs': {
       id: '/utilisateurs'
       path: '/utilisateurs'
@@ -149,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommandesRoute: CommandesRoute,
   HistoriqueRoute: HistoriqueRoute,
   StockRoute: StockRoute,
+  TableauDeBordRoute: TableauDeBordRoute,
   UtilisateursRoute: UtilisateursRoute,
   VenteRoute: VenteRoute,
 }

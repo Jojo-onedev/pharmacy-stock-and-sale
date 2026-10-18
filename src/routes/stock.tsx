@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus, Minus, Pencil, Trash2, Search } from "lucide-react";
 import { AppShell, btnGhost, btnPrimary, card, inputCls } from "@/components/AppShell";
-import { actions, fcfa, useStore, type Product } from "@/lib/store";
+import { actions, canManageProducts, fcfa, useStore, type Product } from "@/lib/store";
 
 export const Route = createFileRoute("/stock")({
   head: () => ({
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/stock")({
       { property: "og:description", content: "Inventaire des médicaments et produits de la Pharmacie Siloé." },
     ],
   }),
-  component: () => <AppShell roles={["admin"]}><Stock /></AppShell>,
+  component: () => <AppShell allow={canManageProducts}><Stock /></AppShell>,
 });
 
 type Draft = Omit<Product, "id"> & { id?: string };
